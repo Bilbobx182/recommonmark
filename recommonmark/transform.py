@@ -2,14 +2,28 @@
 
 import os
 import re
+import textwrap
 
-from docutils import nodes, transforms
+from docutils import frontend, nodes, transforms
 from docutils.statemachine import StringList
 from docutils.parsers.rst import Parser
 from docutils.utils import new_document
 from sphinx import addnodes
 
 from .states import DummyStateMachine
+
+
+def parse_directive(document, directive, rawsource):
+    parser = Parser()
+    settings = document.settings.copy()
+    defaults = frontend.OptionParser(components=(Parser,)).get_default_values()
+    settings.update(defaults, frontend.OptionParser(components=(Parser,)))
+    new_doc = new_document(None, settings)
+    indent = "   "
+    predicate = lambda line: not line.startswith(indent)
+    newsource = u'.. ' + directive + '\n\n' + textwrap.indent(rawsource, indent, predicate=predicate)
+    parser.parse(newsource, new_doc)
+    return new_doc.children[:]
 
 
 class AutoStructify(transforms.Transform):
@@ -48,6 +62,7 @@ class AutoStructify(transforms.Transform):
         'enable_inline_math': True,
         'commonmark_suffixes': ['.md'],
         'url_resolver': lambda x: x,
+        'code_block_directives': [],
     }
 
     def parse_ref(self, ref):
@@ -245,14 +260,12 @@ class AutoStructify(transforms.Transform):
                     StringList(content, source=original_node.source),
                     0, node=node, match_titles=False)
                 return node.children[:]
+        elif language in self.config['code_block_directives']:
+            return parse_directive(self.document, language + "::", node.rawsource)
         else:
-            match = re.search('[ ]?[\w_-]+::.*', language)
+            match = re.search(r'[ ]?([\w_-]+::.*)', language)
             if match:
-                parser = Parser()
-                new_doc = new_document(None, self.document.settings)
-                newsource = u'.. ' + match.group(0) + '\n' + node.rawsource
-                parser.parse(newsource, new_doc)
-                return new_doc.children[:]
+                return parse_directive(self.document, match.group(0), node.rawsource)
             else:
                 return self.state_machine.run_directive(
                     'code-block', arguments=[language],

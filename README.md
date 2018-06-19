@@ -72,6 +72,7 @@ AutoStructify comes with the following options. See [http://recommonmark.readthe
 * __enable_inline_math__: enable the Inline Math feature.
 * __enable_eval_rst__: enable the evaluate embedded reStructuredText feature.
 * __url_resolver__: a function that maps a existing relative position in the document to a http link
+* __code_block_directives__: a list of markdown code block languages which will be handled directly as RST directives.
 
 ## Development
 

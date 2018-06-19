@@ -182,6 +182,19 @@ class CodeBlockTests(unittest.TestCase):
             self.assertIn('<div class="highlight">', output)
 
 
+class CodeLanguageBlockTests(unittest.TestCase):
+
+    def test_integration(self):
+        with sphinx_built_file('sphinx_code_language_block', '_build/text/index.html') as output:
+            print(output)
+            self.assertIn('<div class="admonition warning">', output)
+            self.assertIn('<p class="first admonition-title">Warning</p>', output)
+            self.assertIn('<p class="last">Hello, this is a warning</p>', output)
+            self.assertIn('<div class="code python highlight-python notranslate">', output)
+            self.assertIn('<p class="first sidebar-title">Line numbers and highlights</p>', output)
+            assert False
+
+
 class IndentedCodeTests(unittest.TestCase):
 
     def test_integration(self):
